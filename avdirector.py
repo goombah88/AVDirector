@@ -23,7 +23,7 @@ AUDIO_SLEEP_TIME_SECONDS = 2
 class Dialog(QWidget):
     def __init__(self):
         super().__init__()
-        self.title = "Party Play Indy Bingo"
+        self.title = "AVDirector - Party Play Indy"
         self.logo = 'ppi_logo.jpg'
         self.label = QLabel()
         self.label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -42,7 +42,7 @@ class Window(QWidget):
         super().__init__(parent)
 
         # Set some defaults
-        self.title = "PPI - Bingo Ball Master"
+        self.title = "AVDirector - Party Play Indy"
         self.logo = 'ppi_logo.jpg'
         self.pleaseStandBy = 'happiness.jpg'
         self.dialogExists = False
