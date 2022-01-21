@@ -17,9 +17,6 @@ from PyQt5.QtWidgets import (QApplication, QButtonGroup, QHBoxLayout, QLabel, QL
                              QMessageBox, QPushButton, QRadioButton,
                              QSizePolicy, QVBoxLayout, QWidget)
 
-TIMER_DURATION = 1
-AUDIO_SLEEP_TIME_SECONDS = 2
-
 class Dialog(QWidget):
     def __init__(self):
         super().__init__()
@@ -36,7 +33,6 @@ class Dialog(QWidget):
     def load_image(self, image):
         self.label.setPixmap(image)
 
-
 class Window(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -47,37 +43,41 @@ class Window(QWidget):
         self.pleaseStandBy = 'happiness.jpg'
         self.dialogExists = False
         self.activeRound = False
-        self.mode = 'manual'
-        self.audioMode = 'off'
-        self.secondsLeftInTimer = TIMER_DURATION
         
         self.selectedBalls = []
         self.refreshBalls()
-        self.app = QApplication.instance()
-        self.screens_available = self.app.screens()
-        #print("screens:", self.screens_available)
-        if self.screens_available == 0:
-            self.selected_screen = 0
-        else:
-            self.selected_screen = 1
 
-        self.screen = self.screens_available[self.selected_screen]
-        self.screen_width = self.screen.size().width()
-        self.screen_height = self.screen.size().height()
+        # self.app = QApplication.instance()
+        # self.screens_available = self.app.screens()
+        # print("screens:", self.screens_available)
+        # if self.screens_available == 0:
+        #     self.selected_screen = 0
+        # else:
+        #     self.selected_screen = 1
+
+        # self.screen = self.screens_available[self.selected_screen]
+        # self.screen_width = self.screen.size().width()
+        # self.screen_height = self.screen.size().height()
+        # # Good default screen height for modern screens
+        # self.screen_height = 1920
         
-        if platform.system() == "Linux":
-            # Linux
-            import termios
-            chrome_path = '/usr/bin/google-chrome'
-        else:
-            # Windows
-            chrome_path = 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
+        # Get path to chrome
+        # if platform.system() == "Linux":
+        #     # Linux
+        #     import termios
+        #     chrome_path = '/usr/bin/google-chrome'
+        # else:
+        #     # Windows
+        #     chrome_path = 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
        
+       # Separate module for GUI?
         self.InitWindow()
 
     def InitWindow(self):
         self.setWindowTitle(self.title)
-        self.setGeometry(100, self.screen_height - 310, 400, 200)
+        #self.setGeometry(100, self.screen_height - 800, 400, 200)
+
+        self.lblCurrentRoundTitle = QLabel("Current Round: ")
 
         # StartRound Button
         self.btnStartRound = QPushButton("Start Round")
@@ -102,91 +102,44 @@ class Window(QWidget):
         self.btnNext.setIconSize(QSize(100,100))
         self.btnNext.setDisabled(True)
 
+        lblQuestions = QLabel("Questions for the active round")
         self.previousBallListbox = QListWidget()
-
-        hboxOptions = QHBoxLayout()
-        self.radioBtnGroupMode = QButtonGroup()
-        self.radioBtnGroupAudio = QButtonGroup()
-
-        # Auto/Manual Toggle
-        self.radioManual = QRadioButton("Manual")
-        self.radioManual.setChecked(True)
-        self.radioManual.mode = "manual"
-        self.radioManual.toggled.connect(self.modeSelected)
-
-        self.radioAuto = QRadioButton("Auto")
-        self.radioAuto.setChecked(False)
-        self.radioAuto.mode = "auto"
-        self.radioAuto.toggled.connect(self.modeSelected)
-
-        self.radioBtnGroupMode.addButton(self.radioManual)
-        self.radioBtnGroupMode.addButton(self.radioAuto)
-       
-        hboxRadioButtons = QHBoxLayout()
-        hboxRadioButtons.addWidget(self.radioManual)
-        hboxRadioButtons.addWidget(self.radioAuto)
-
-        # Audio ON/OFF
-        hboxAudioRadioButtons = QHBoxLayout()
-
-        self.radioAudioOn = QRadioButton("On")
-        self.radioAudioOn.setChecked(False)
-        self.radioAudioOn.audiomode = "on"
-        self.radioAudioOn.toggled.connect(self.audioModeSelected)
-        hboxAudioRadioButtons.addWidget(self.radioAudioOn)
-
-        self.radioAudioOff = QRadioButton("Off")
-        self.radioAudioOff.setChecked(True)
-        self.radioAudioOff.audiomode = "off"
-        self.radioAudioOff.toggled.connect(self.audioModeSelected)
-        hboxAudioRadioButtons.addWidget(self.radioAudioOff)
-
-        self.radioBtnGroupAudio.addButton(self.radioAudioOn)
-        self.radioBtnGroupAudio.addButton(self.radioAudioOff)
-
-        # Timer
-        hboxTimer = QHBoxLayout()
-        self.lblTimeLeft = QLabel()
-        self.lblTimeLeft.setText(str(self.secondsLeftInTimer))
-        label = QLabel("sec remaining")
-        hboxTimer.addWidget(self.lblTimeLeft)
-        hboxTimer.addWidget(label)
-
-        hboxOptions.addLayout(hboxRadioButtons)
-        hboxOptions.addLayout(hboxAudioRadioButtons)
-        hboxOptions.addLayout(hboxTimer)
 
         # Small display for host
         vboxSmallDisplay = QVBoxLayout()
         self.small_display = QLabel()
         self.small_display.setFixedSize(175, 175)
-        #self.small_display.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.small_display.setAlignment(Qt.AlignCenter)
         self.set_small_display(self.logo)
         vboxSmallDisplay.addWidget(self.small_display)
         self.small_display.setVisible(False)
 
         ###
+        # Master HBox for all content
         vboxMaster = QVBoxLayout()
         ###
 
-        hboxMain = QHBoxLayout()
-        hboxMain.addWidget(self.previousBallListbox)
+        vboxRoundControls = QVBoxLayout()
+
+        # Now add everything into the display
+        hboxRoundControlButtons = QHBoxLayout()
         vboxButtons = QVBoxLayout()
         vboxButtons.addWidget(self.btnStartRound)
         vboxButtons.addWidget(self.btnEndRound)
-        hboxMain.addLayout(vboxButtons)
-        hboxMain.addWidget(self.btnNext)
-        hboxMain.addLayout(vboxSmallDisplay)
+        hboxRoundControlButtons.addLayout(vboxButtons)
+        hboxRoundControlButtons.addWidget(self.btnNext)
+        hboxRoundControlButtons.addLayout(vboxSmallDisplay)
 
-        vboxMaster.addLayout(hboxMain)
-        vboxMaster.addLayout(hboxOptions)
+        vboxMaster.addWidget(self.currentRoundTitle)
+        vboxMaster.addLayout(hboxRoundControlButtons)
+        vboxMaster.addWidget(lblQuestions)
+        vboxMaster.addWidget(self.previousBallListbox)
 
         self.setLayout(vboxMaster)
 
     def closeEvent(self, event):
         if self.activeRound:
-            reply = QMessageBox.question(self, "Window Close", 'Round in Progress. Really Close?', 
+            reply = QMessageBox.question(self, "Window Close", 'Round in Progress. Sure ya wanna quit?', 
                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             #print("reply:", reply)
             if reply == QMessageBox.Yes:
@@ -283,45 +236,6 @@ class Window(QWidget):
 
     def addToSelectedBallsList(self, new_ball):
         self.previousBallListbox.insertItem(0, str(new_ball).replace(".png", ""))
-
-    def modeSelected(self):
-        radioButton = self.sender()
-        if radioButton.isChecked():
-            self.mode = radioButton.mode
-            print("Mode is %s" % (self.mode))
-
-    def audioModeSelected(self):
-        radioButton = self.sender()
-        if radioButton.isChecked():
-            self.audioMode = radioButton.audiomode
-            print("Audio Mode is %s" % (self.audioMode))
-
-    def timer_start(self):
-        self.secondsLeftInTimer = TIMER_DURATION
-        self.timerCountdown = QtCore.QTimer(self)
-        self.timerCountdown.timeout.connect(self.timer_timeout)
-        self.timerCountdown.start(1000)
-        self.btnNext.setEnabled(False)
-
-        self.update_gui()
-
-    def timer_stop(self):
-        self.timerCountdown.stop()
-        self.lblTimeLeft.setText(str(TIMER_DURATION))
-
-    def timer_timeout(self):
-        if self.secondsLeftInTimer > 0:            
-            self.secondsLeftInTimer -= 1
-        else:
-            self.timerCountdown.stop()
-            self.btnNext.setEnabled(True)
-            if self.mode == "auto":
-                self.loadNextBall()
-                #self.timerLeft = TIMER_DURATION
-        self.update_gui()
-
-    def update_gui(self):
-        self.lblTimeLeft.setText(str(self.secondsLeftInTimer))
 
     def set_small_display(self, image_file):
         pixmap = QPixmap(image_file).scaledToWidth(175).scaledToHeight(175)
