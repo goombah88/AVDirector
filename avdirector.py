@@ -6,21 +6,17 @@ from os import listdir
 from os.path import isfile, join
 from pathlib import Path
 
-# from typing import Deque
-
-# from playsound import playsound
-from PyQt5 import QtCore
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import (
     QApplication,
-    QButtonGroup,
+    # QButtonGroup,
     QHBoxLayout,
     QLabel,
     QListWidget,
     QMessageBox,
     QPushButton,
-    QRadioButton,
+    # QRadioButton,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
@@ -113,8 +109,10 @@ class Window(QWidget):
         self.btnNext.setIconSize(QSize(100, 100))
         self.btnNext.setDisabled(True)
 
-        lblQuestions = QLabel("Questions for the active round")
-        self.previousBallListbox = QListWidget()
+        lblQuestions = QLabel("Questions for this round")
+        self.lbxQuestions = QListWidget()
+
+        self.currentRoundTitle = QLabel("Current Round: ")
 
         # Small display for host
         vboxSmallDisplay = QVBoxLayout()
@@ -130,7 +128,7 @@ class Window(QWidget):
         vboxMaster = QVBoxLayout()
         ###
 
-        vboxRoundControls = QVBoxLayout()
+        # vboxRoundControls = QVBoxLayout()
 
         # Now add everything into the display
         hboxRoundControlButtons = QHBoxLayout()
@@ -144,7 +142,7 @@ class Window(QWidget):
         vboxMaster.addWidget(self.currentRoundTitle)
         vboxMaster.addLayout(hboxRoundControlButtons)
         vboxMaster.addWidget(lblQuestions)
-        vboxMaster.addWidget(self.previousBallListbox)
+        vboxMaster.addWidget(self.lbxQuestions)
 
         self.setLayout(vboxMaster)
 
@@ -173,7 +171,7 @@ class Window(QWidget):
         self.btnStartRound.setDisabled(True)
         self.small_display.setVisible(True)
         self.btnNext.setEnabled(True)
-        self.previousBallListbox.clear()
+        self.lbxQuestions.clear()
         if not self.dialogExists:
             self.dialog = Dialog()
             self.dialog.setGeometry(50, 50, 300, 300)
@@ -190,30 +188,25 @@ class Window(QWidget):
         self.dialog.load_image(pixmap)
         self.set_small_display(pixmap)
         self.dialogExists = True
-        self.timer_stop()
         self.refreshBalls()
         self.btnNext.setEnabled(False)
         self.btnStartRound.setDisabled(False)
         self.presentWinningBalls()
 
     def presentWinningBalls(self):
-        # Sort all selectedBalls by letter then number to make it easier to check winners
+        # Sort all selectedBalls by letter then number 
+        # to make it easier to check winners
         letters = ["b", "i", "n", "g", "o"]
         sorted_balls = []
         for letter in letters:
-            """For each letter in B.I.N.G.O. sort the balls from each letter and add them to the listwidget"""
+            """For each letter in B.I.N.G.O. sort the balls 
+            from each letter and add them to the listwidget"""
             temp_balls = []
             print("checking letter", letter)
-            for ball in range(self.previousBallListbox.count()):
-                if (
-                    self.previousBallListbox.item(ball)
-                    .text()
-                    .startswith(letter)
-                ):
-                    print("adding", self.previousBallListbox.item(ball).text())
-                    temp_balls.append(
-                        self.previousBallListbox.item(ball).text()
-                    )
+            for ball in range(self.lbxQuestions.count()):
+                if self.lbxQuestions.item(ball).text().startswith(letter):
+                    print("adding", self.lbxQuestions.item(ball).text())
+                    temp_balls.append(self.lbxQuestions.item(ball).text())
                     print("temp_balls:", temp_balls)
             if temp_balls:
                 for ball in sorted(temp_balls):
@@ -222,9 +215,9 @@ class Window(QWidget):
 
         print("sorted_balls:", sorted_balls)
 
-        self.previousBallListbox.clear()
+        self.lbxQuestions.clear()
         for ball in sorted_balls:
-            self.previousBallListbox.addItem(str(ball))
+            self.lbxQuestions.addItem(str(ball))
 
     def refreshBalls(self):
         self.ball_dir = Path("balls/")
@@ -240,14 +233,6 @@ class Window(QWidget):
         self.dialog.load_image(pixmap)
         pixmap = QPixmap(new_ball_path).scaledToWidth(175).scaledToHeight(175)
         self.small_display.setPixmap(pixmap)
-        self.timer_start()
-        new_sound = "sounds/" + new_ball.replace(".png", ".mp3")
-        """ try:
-            playsound(new_sound)
-            time.sleep(AUDIO_SLEEP_TIME_SECONDS)
-            playsound(new_sound)
-        except:
-            pass """
 
     def getNextBall(self):
         self.activeRound = True
@@ -261,9 +246,7 @@ class Window(QWidget):
             return chosen_ball
 
     def addToSelectedBallsList(self, new_ball):
-        self.previousBallListbox.insertItem(
-            0, str(new_ball).replace(".png", "")
-        )
+        self.lbxQuestions.insertItem(0, str(new_ball).replace(".png", ""))
 
     def set_small_display(self, image_file):
         pixmap = QPixmap(image_file).scaledToWidth(175).scaledToHeight(175)
