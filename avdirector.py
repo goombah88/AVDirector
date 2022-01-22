@@ -75,7 +75,8 @@ class Window(QWidget):
         #     chrome_path = '/usr/bin/google-chrome'
         # else:
         #     # Windows
-        #     chrome_path = 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
+        #     chrome_path =
+        # 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
 
         # Separate module for GUI?
         self.InitWindow()
@@ -194,12 +195,12 @@ class Window(QWidget):
         self.presentWinningBalls()
 
     def presentWinningBalls(self):
-        # Sort all selectedBalls by letter then number 
+        # Sort all selectedBalls by letter then number
         # to make it easier to check winners
         letters = ["b", "i", "n", "g", "o"]
         sorted_balls = []
         for letter in letters:
-            """For each letter in B.I.N.G.O. sort the balls 
+            """For each letter in B.I.N.G.O. sort the balls
             from each letter and add them to the listwidget"""
             temp_balls = []
             print("checking letter", letter)
