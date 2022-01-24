@@ -2,9 +2,10 @@
 
 import random
 import sys
-from os import listdir
-from os.path import isfile, join
-from pathlib import Path
+
+# from os import listdir
+# from os.path import isfile, join
+# from pathlib import Path
 from jproperties import Properties
 import re
 
@@ -26,7 +27,7 @@ from PyQt5.QtWidgets import (
     QFileDialog,
 )
 
-QUESTION_DIR = Path("questions/")
+# QUESTION_DIR = Path("questions/")
 
 
 class Dialog(QWidget):
@@ -45,6 +46,9 @@ class Dialog(QWidget):
     def load_image(self, image):
         self.label.setPixmap(image)
 
+    def load_text(self, image):
+        self.label.setPixmap(image)
+
 
 class Window(QWidget):
     def __init__(self, parent=None):
@@ -56,7 +60,9 @@ class Window(QWidget):
         self.pleaseStandBy = "happiness.jpg"
         self.dialogExists = False
         self.activeRound = False
-        self.proceed = False
+        self.lineCount = 0
+        self.lstQuestions = []
+        self.lstAnswers = []
 
         self.selectedBalls = []
 
@@ -118,10 +124,12 @@ class Window(QWidget):
         self.btnNext.setDisabled(False)
 
         lblQuestions = QLabel("Questions for this round")
-        self.lbxQuestions = QListWidget()
-        self.lbxQuestions.clicked.connect(self.questionSelected)
-        lblAnswers = QLabel("Answers for this round")
-        self.lbxAnswers = QListWidget()
+        self.listboxQuestions = QListWidget()
+        self.listboxQuestions.clicked.connect(self.questionSelected)
+        self.lblAnswers = QLabel("Answers for this round")
+        self.listboxAnswers = QListWidget()
+        self.lblAnswers.setVisible(False)
+        self.listboxAnswers.setVisible(False)
 
         # Small display for host
         vboxSmallDisplay = QVBoxLayout()
@@ -135,13 +143,18 @@ class Window(QWidget):
         self.comboCategories = QComboBox(self)
         self.comboCategories.addItem("Select a Category")
         self.comboCategories.activated[str].connect(self.onComboChanged)
-        self.lstQuestions = [f.replace(".ppq", "") for f in listdir(QUESTION_DIR) if isfile(join(QUESTION_DIR, f))]
+        # self.lstQuestions = [
+        #     f.replace(".ppc", "")
+        #     for f in listdir(QUESTION_DIR)
+        #     if isfile(join(QUESTION_DIR, f))
+        # ]
         # print(f'Found categories: {self.lstQuestions}')
-        self.comboCategories.addItems(sorted(self.lstQuestions, key=str.lower))
+        # self.comboCategories\
+        # .addItems(sorted(self.lstQuestions, key=str.lower))
 
         # Load file
         self.btnLoadFile = QPushButton("Load File")
-        self.btnLoadFile.clicked.connect(self.getFileName)
+        self.btnLoadFile.clicked.connect(self.loadFile)
         self.btnLoadFile.setDisabled(False)
 
         ###
@@ -173,11 +186,11 @@ class Window(QWidget):
         hboxQandA = QHBoxLayout()
         vboxQuestions = QVBoxLayout()
         vboxQuestions.addWidget(lblQuestions)
-        vboxQuestions.addWidget(self.lbxQuestions)
+        vboxQuestions.addWidget(self.listboxQuestions)
         hboxQandA.addLayout(vboxQuestions)
         vboxAnswers = QVBoxLayout()
-        vboxAnswers.addWidget(lblAnswers)
-        vboxAnswers.addWidget(self.lbxAnswers)
+        vboxAnswers.addWidget(self.lblAnswers)
+        vboxAnswers.addWidget(self.listboxAnswers)
         hboxQandA.addLayout(vboxAnswers)
 
         vboxMaster.addLayout(hboxQandA)
@@ -209,7 +222,7 @@ class Window(QWidget):
         self.btnStartRound.setDisabled(True)
         self.small_display.setVisible(True)
         self.btnNext.setEnabled(True)
-        self.lbxQuestions.clear()
+        self.listboxQuestions.clear()
         if not self.dialogExists:
             self.dialog = Dialog()
             self.dialog.setGeometry(50, 50, 300, 300)
@@ -220,7 +233,9 @@ class Window(QWidget):
 
     def endRound(self):
         self.activeRound = False
-        pixmap = QPixmap(self.pleaseStandBy).scaled(800, 800, Qt.KeepAspectRatio, Qt.FastTransformation)
+        pixmap = QPixmap(self.pleaseStandBy).scaled(
+            800, 800, Qt.KeepAspectRatio, Qt.FastTransformation
+        )
         self.dialog.load_image(pixmap)
         self.set_small_display(pixmap)
         self.dialogExists = True
@@ -228,35 +243,9 @@ class Window(QWidget):
         self.btnStartRound.setDisabled(False)
         # self.presentWinningBalls()
 
-    def presentWinningBalls(self):
-        # Sort all selectedBalls by letter then number
-        # to make it easier to check winners
-        letters = ["b", "i", "n", "g", "o"]
-        sorted_balls = []
-        for letter in letters:
-            """For each letter in B.I.N.G.O. sort the balls
-            from each letter and add them to the listwidget"""
-            temp_balls = []
-            print("checking letter", letter)
-            for ball in range(self.lbxQuestions.count()):
-                if self.lbxQuestions.item(ball).text().startswith(letter):
-                    print("adding", self.lbxQuestions.item(ball).text())
-                    temp_balls.append(self.lbxQuestions.item(ball).text())
-                    print("temp_balls:", temp_balls)
-            if temp_balls:
-                for ball in sorted(temp_balls):
-                    sorted_balls.append(ball)
-                sorted_balls.append("-----")
-
-        print("sorted_balls:", sorted_balls)
-
-        self.lbxQuestions.clear()
-        for ball in sorted_balls:
-            self.lbxQuestions.addItem(str(ball))
-
     def loadNextBall(self):
         print("NEXT PRESSED")
-        self.run(self.fileName)
+        self.analyzeLine(self.lineCount)
 
         """new_ball = self.getNextBall()
         new_ball_path = "balls/" + new_ball
@@ -277,7 +266,7 @@ class Window(QWidget):
             return chosen_ball
 
     def addQuestionToList(self, question):
-        self.lbxQuestions.insertItem(0, str(question).replace(".ppq", ""))
+        self.listboxQuestions.insertItem(0, str(question).replace(".ppq", ""))
 
     def set_small_display(self, image_file):
         pixmap = QPixmap(image_file).scaledToWidth(175).scaledToHeight(175)
@@ -286,13 +275,13 @@ class Window(QWidget):
     def onComboChanged(self, text):
         print(f"{text} activated")
         self.activeCategory = text
-        self.activeFile = f"{QUESTION_DIR}/{self.activeCategory}.ppq"
+        # self.activeFile = f"{QUESTION_DIR}/{self.activeCategory}.ppq"
         print(f"cat: {self.activeCategory}, file: {self.activeFile}")
         self.readInQuestions(self.activeFile)
 
     def readInQuestions(self, questionFile):
-        self.lbxQuestions.clear()
-        self.lbxAnswers.clear()
+        self.listboxQuestions.clear()
+        self.listboxAnswers.clear()
         # Read in the properties file
         questionsDict = {}
         configs = Properties()
@@ -315,8 +304,10 @@ class Window(QWidget):
                 _idx = f"{index+1}. "
                 print(f"q is: {_question}")
                 print(f"i is: {_idx}")
-                self.lbxQuestions.insertItem(index, f"{_idx}{_question}")
-                self.lbxAnswers.insertItem(index, questionsDict.get(f"answer{index}"))
+                self.listboxQuestions.insertItem(index, f"{_idx}{_question}")
+                self.listboxAnswers.insertItem(
+                    index, questionsDict.get(f"answer{index}")
+                )
                 index += 1
 
         # self.lbxQuestions.insertItem(0, configs.get("question1").data)
@@ -344,80 +335,112 @@ class Window(QWidget):
         print(f"STATUS TYPE: {type(_status)}")
 
     def questionSelected(self, model):
-        self.lbxAnswers.setCurrentRow(model.row())
+        self.listboxAnswers.setCurrentRow(model.row())
+
+    def loadFile(self, inputFile):
+        inputFile = self.getFileName()
+        with open(inputFile, encoding="utf-8-sig") as fp:
+            # self.contents = fp.readlines()
+            self.contents = [line for line in fp.readlines() if line.strip()]
+        print(f"ALL CONTENTS:{self.contents}")
+        # print("CALLING RUN")
+        self.analyzeLine(0)
 
     def getFileName(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         self.fileName, _ = QFileDialog.getOpenFileName(
-            self, "QFileDialog.getOpenFileName()", "", "All Files (*);;Python Files (*.py)", options=options
+            self,
+            "QFileDialog.getOpenFileName()",
+            "",
+            # "All Files (*);;Python Files (*.py)",
+            "Party Play Indy Config Files (*.ppc)",
+            options=options,
         )
         if self.fileName:
             print(f"file: {self.fileName}")
-            self.lineCount = 1
-            self.run(self.fileName)
+            return self.fileName
+            # self.run(self.fileName)
+            # Read text file to list
 
-    def run(self, inputFile):
-        if self.lineCount == 1:
-            # This means we're starting fresh
-            self.lstQuestions = []
-            self.lstAnswers = []
+    def analyzeLine(self, lineCount):
+        self.lineCount = lineCount
+        # if lineCount == -1:
+        #     # This means we're starting fresh
+        #     self.lstQuestions = []
+        #     self.lstAnswers = []
 
         # Read in text file
         # Keep track of where we left off in the file with lineCount
-        with open(inputFile) as fp:
-            lines = fp.readlines()
-            # Skip to the line we left off on
-            # for i in range(self.lineCount):
-            #     fp, next(i)
-            for line in lines:
-                print(f'CHECKING LINE:{self.lineCount}')
-                # if line[0].isalpha():
+        # with open(inputFile) as self.fp:
+        #     while self.getProceed():
+        # lines = self.fp.readlines()
+        # Skip to the line we left off on
+        # for i in range(self.lineCount):
+        #     fp, next(i)
+        line = self.contents[self.lineCount]
+        # if self.lineCount == 0:
+        #     print("First run")
+        #     line = self.contents[self.lineCount]
+        # else:
+        #     line = self.contents[self.lineCount + 1]
+        # for line in lines:
+        # if line[0].isalpha():
+        print(f"LINE:{line}")
+        print(f"CURRENT LINE COUNT:{self.lineCount}")
 
-                # CATEGORY CHECK
-                if re.search("^[A-Z][a-z]", line):
-                    # print(f'CATEGORY:{line}')
-                    self.updateCategory(line.strip())
+        # CATEGORY CHECK
+        if re.search("^[A-Z][a-z]", line):
+            # print(f'CATEGORY:{line}')
+            self.updateCategory(line.strip())
 
-                # BLANK LINE CHECK
-                if line.isspace():
-                    # print('BLANK LINE')
-                    continue
+        # BLANK LINE CHECK
+        # if line == "\n":
+        #     print("BLANK LINE")
+        #     self.analyzeLine(self.lineCount)
 
-                # QUESTION CHECK
-                if line[0].isdigit():
-                    # QUESTION, Display it
-                    # print(f'QUESTION:{line}')
-                    break
-                    self.updateQuestion(line.strip())
+        # QUESTION CHECK
+        if line[0].isdigit():
+            # QUESTION, Display it
+            # print(f'QUESTION:{line}')
+            self.updateQuestion(line.strip())
 
-                # ANSWER CHECK
-                if re.search("^\\t+[A-Z]*", line):
-                    # print(f'ANSWER:{line}')
-                    self.addAnswerToList(line.strip())
-                    break
+        # ANSWER CHECK
+        if re.search("^\t[a-zA-Z]*", line):
+            # print(f'ANSWER:{line}')
+            self.updateAnswers(line.strip())
 
-                self.lineCount += 1
+        print("incrementing counter")
+        self.lineCount += 1
 
     def updateCategory(self, category):
-        print(f"Updating Category to {category}")
+        print(f"CATEGORY:{category}")
+        self.reset()
         self.currentRoundTitle.setText(category)
 
     def updateQuestion(self, question):
         self.lstQuestions.append(question)
-        self.lbxQuestions.clear()
-        self.lbxQuestions.addItems(self.lstQuestions)
-        print(f"Updating Question to {question}")
-        self.run(self.fileName)
+        self.listboxQuestions.clear()
+        self.listboxQuestions.addItems(self.lstQuestions)
+        print(f"QUESTION:{question}")
+        # self.analyzeLine(self.lineCount)
 
-    def addAnswerToList(self, answer):
+    def updateAnswers(self, answer):
         self.lstAnswers.append(answer)
         if len(self.lstAnswers) == 5:
-            self.lbxAnswers.addItems(self.lstAnswers)
-        print(f"Adding answer {answer}")
-    
-    def wait():
-        pass
+            self.listboxAnswers.addItems(self.lstAnswers)
+            self.lblAnswers.setVisible(True)
+            self.listboxAnswers.setVisible(True)
+        print(f"ANSWER:{answer}")
+        # self.analyzeLine(self.lineCount)
+
+    def reset(self):
+        self.lblAnswers.setVisible(False)
+        self.listboxAnswers.setVisible(False)
+        self.lstQuestions.clear()
+        self.lstAnswers.clear()
+        self.listboxQuestions.clear()
+        self.listboxAnswers.clear()
 
 
 if __name__ == "__main__":
