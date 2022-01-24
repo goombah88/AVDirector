@@ -368,8 +368,8 @@ class Window(QWidget):
         with open(inputFile) as fp:
             lines = fp.readlines()
             # Skip to the line we left off on
-            for i in range(self.lineCount):
-                fp, next(i)
+            # for i in range(self.lineCount):
+            #     fp, next(i)
             for line in lines:
                 print(f'CHECKING LINE:{self.lineCount}')
                 # if line[0].isalpha():
@@ -415,6 +415,9 @@ class Window(QWidget):
         if len(self.lstAnswers) == 5:
             self.lbxAnswers.addItems(self.lstAnswers)
         print(f"Adding answer {answer}")
+    
+    def wait():
+        pass
 
 
 if __name__ == "__main__":
