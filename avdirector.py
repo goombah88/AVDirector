@@ -9,7 +9,7 @@ import sys
 from jproperties import Properties
 import re
 
-from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtCore import QSize, Qt, QTimer
 from PyQt5.QtGui import QIcon, QPixmap, QFont
 from PyQt5.QtWidgets import (
     QApplication,
@@ -98,6 +98,7 @@ class Window(QWidget):
         self.lineCount = 0
         self.lstQuestions = []
         self.lstAnswers = []
+        self.timerRoundOver = QTimer()
 
         self.selectedBalls = []
 
