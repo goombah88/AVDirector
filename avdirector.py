@@ -37,15 +37,20 @@ class Dialog(QWidget):
 
         self.lblCategory = QLabel("Party Play Indy")
         self.lblCategory.resize(100, 100)
-        # self.lblCategory.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+        # self.lblCategory.setSizePolicy(
+        # QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.lblCategory.setAlignment(Qt.AlignCenter)
         # self.lblCategory.setFont(QFont('Comic Sans', 40))
-        self.lblCategory.setStyleSheet("background-color: #00ffc4; font: 40pt Times")
+        self.lblCategory.setStyleSheet(
+            "background-color: #00ffc4; font: 40pt Times"
+        )
 
         self.lblQuestion = QLabel()
-        self.lblQuestion.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.lblQuestion.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Expanding
+        )
         self.lblQuestion.setAlignment(Qt.AlignCenter)
-        self.lblQuestion.setFont(QFont('Comic Sans', 60))
+        self.lblQuestion.setFont(QFont("Comic Sans", 60))
         self.lblQuestion.setWordWrap(True)
         self.lblQuestion.setStyleSheet("background-color: white")
         pixmap = QPixmap(self.logo)
@@ -60,6 +65,7 @@ class Dialog(QWidget):
         self.lblQuestion.setPixmap(image)
 
     def show_logo(self):
+        self.lblQuestion.setAlignment(Qt.AlignCenter)
         pixmap = QPixmap(self.logo)
         self.setCategory("Party Play Indy")
         self.lblQuestion.setPixmap(pixmap)
@@ -69,6 +75,13 @@ class Dialog(QWidget):
 
     def setQuestion(self, text):
         self.lblQuestion.setStyleSheet("background-color: #00ffc4")
+        self.lblQuestion.setText(text)
+
+    def showAllQuestions(self, text):
+        self.lblQuestion.setAlignment(Qt.AlignVCenter)
+        self.lblQuestion.setStyleSheet(
+            "background-color: #00ffc4; font: 60pt Times"
+        )
         self.lblQuestion.setText(text)
 
 
@@ -471,6 +484,12 @@ class Window(QWidget):
             self.listboxAnswers.addItems(self.lstAnswers)
             self.lblAnswers.setVisible(True)
             self.listboxAnswers.setVisible(True)
+
+            # Display all 5 questions for people
+            questions = ""
+            for q in self.lstQuestions:
+                questions += q + "\n"
+            self.dialog.showAllQuestions(questions)
         # self.analyzeLine(self.lineCount)
 
     def reset(self):
