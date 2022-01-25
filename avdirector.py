@@ -10,20 +10,18 @@ from jproperties import Properties
 import re
 
 from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtGui import QIcon, QPixmap, QFont
 from PyQt5.QtWidgets import (
     QApplication,
-    # QButtonGroup,
     QHBoxLayout,
     QLabel,
     QListWidget,
     QMessageBox,
     QPushButton,
-    # QRadioButton,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
-    QComboBox,
+    # QComboBox,
     QFileDialog,
 )
 
@@ -33,21 +31,45 @@ from PyQt5.QtWidgets import (
 class Dialog(QWidget):
     def __init__(self):
         super().__init__()
-        self.title = "AVDirector - Party Play Indy"
+        self.setWindowTitle("AVDirector - Party Play Indy")
+        self.setStyleSheet("background-color: #00ffc4")
         self.logo = "ppi_logo.jpg"
-        self.label = QLabel()
-        self.label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.label.setAlignment(Qt.AlignCenter)
+
+        self.lblCategory = QLabel("Party Play Indy")
+        self.lblCategory.resize(100, 100)
+        # self.lblCategory.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.lblCategory.setAlignment(Qt.AlignCenter)
+        # self.lblCategory.setFont(QFont('Comic Sans', 40))
+        self.lblCategory.setStyleSheet("background-color: #00ffc4; font: 40pt Times")
+
+        self.lblQuestion = QLabel()
+        self.lblQuestion.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.lblQuestion.setAlignment(Qt.AlignCenter)
+        self.lblQuestion.setFont(QFont('Comic Sans', 60))
+        self.lblQuestion.setWordWrap(True)
+        self.lblQuestion.setStyleSheet("background-color: white")
         pixmap = QPixmap(self.logo)
-        self.label.setPixmap(pixmap)
-        lay = QVBoxLayout(self)
-        lay.addWidget(self.label)
+        self.lblQuestion.setPixmap(pixmap)
+
+        # Pack it all in
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.lblCategory)
+        layout.addWidget(self.lblQuestion)
 
     def load_image(self, image):
-        self.label.setPixmap(image)
+        self.lblQuestion.setPixmap(image)
 
-    def load_text(self, image):
-        self.label.setPixmap(image)
+    def show_logo(self):
+        pixmap = QPixmap(self.logo)
+        self.setCategory("Party Play Indy")
+        self.lblQuestion.setPixmap(pixmap)
+
+    def setCategory(self, text):
+        self.lblCategory.setText(text)
+
+    def setQuestion(self, text):
+        self.lblQuestion.setStyleSheet("background-color: #00ffc4")
+        self.lblQuestion.setText(text)
 
 
 class Window(QWidget):
@@ -98,7 +120,9 @@ class Window(QWidget):
         self.setGeometry(550, 350, 650, 450)
 
         self.lblCurrentRoundTitle = QLabel("Current Round: ")
+        self.lblCurrentRoundTitle.setAlignment(Qt.AlignLeft)
         self.currentRoundTitle = QLabel()
+        self.currentRoundTitle.setAlignment(Qt.AlignLeft)
 
         # StartRound Button
         self.btnStartRound = QPushButton("Start Round")
@@ -107,21 +131,20 @@ class Window(QWidget):
         self.btnStartRound.setIcon(QIcon("start_icon.png"))
         self.btnStartRound.setIconSize(QSize(50, 50))
 
-        # EndRound Button
-        self.btnEndRound = QPushButton("End Round")
-        self.btnEndRound.setFixedSize(250, 75)
-        self.btnEndRound.clicked.connect(self.endRound)
-        self.btnEndRound.setDisabled(True)
-        self.btnEndRound.setIcon(QIcon("end_icon.png"))
-        self.btnEndRound.setIconSize(QSize(50, 50))
+        # ShowLogo Button
+        self.btnShowLogo = QPushButton()
+        self.btnShowLogo.setFixedSize(100, 100)
+        self.btnShowLogo.clicked.connect(self.showLogoInDialog)
+        self.btnShowLogo.setIcon(QIcon("ppi_logo.jpg"))
+        self.btnShowLogo.setIconSize(QSize(100, 100))
 
         # Next Button
         self.btnNext = QPushButton()
         self.btnNext.setFixedSize(175, 175)
         self.btnNext.clicked.connect(self.loadNextBall)
-        self.btnNext.setIcon(QIcon("next_button.jpg"))
+        self.btnNext.setIcon(QIcon("next_button.png"))
         self.btnNext.setIconSize(QSize(100, 100))
-        self.btnNext.setDisabled(False)
+        self.btnNext.setDisabled(True)
 
         lblQuestions = QLabel("Questions for this round")
         self.listboxQuestions = QListWidget()
@@ -140,9 +163,9 @@ class Window(QWidget):
         vboxSmallDisplay.addWidget(self.small_display)
         self.small_display.setVisible(False)
 
-        self.comboCategories = QComboBox(self)
-        self.comboCategories.addItem("Select a Category")
-        self.comboCategories.activated[str].connect(self.onComboChanged)
+        # self.comboCategories = QComboBox(self)
+        # self.comboCategories.addItem("Select a Category")
+        # self.comboCategories.activated[str].connect(self.onComboChanged)
         # self.lstQuestions = [
         #     f.replace(".ppc", "")
         #     for f in listdir(QUESTION_DIR)
@@ -171,11 +194,12 @@ class Window(QWidget):
         # Now add everything into the display
         hboxRoundControlButtons = QHBoxLayout()
         vboxButtons = QVBoxLayout()
-        vboxButtons.addWidget(self.btnStartRound)
-        vboxButtons.addWidget(self.btnEndRound)
-        hboxRoundControlButtons.addWidget(self.comboCategories)
+        # vboxButtons.addWidget(self.btnStartRound)
+        # vboxButtons.addWidget(self.btnEndRound)
+        # hboxRoundControlButtons.addWidget(self.comboCategories)
         hboxRoundControlButtons.addLayout(vboxButtons)
         hboxRoundControlButtons.addWidget(self.btnNext)
+        hboxRoundControlButtons.addWidget(self.btnShowLogo)
         hboxRoundControlButtons.addLayout(vboxSmallDisplay)
 
         vboxMaster.addWidget(self.btnLoadFile)
@@ -228,19 +252,17 @@ class Window(QWidget):
             self.dialog.setGeometry(50, 50, 300, 300)
             self.dialog.show()
             self.btnNext.setDisabled(False)
-            self.btnEndRound.setDisabled(False)
-            self.dialogExists = True
+            # self.dialogExists = True
 
-    def endRound(self):
+    def showLogoInDialog(self):
         self.activeRound = False
-        pixmap = QPixmap(self.pleaseStandBy).scaled(
-            800, 800, Qt.KeepAspectRatio, Qt.FastTransformation
-        )
-        self.dialog.load_image(pixmap)
-        self.set_small_display(pixmap)
+        if not self.dialogExists:
+            self.dialog = Dialog()
+            self.dialog.setGeometry(50, 50, 300, 300)
+            self.dialog.show()
+        self.dialog.show_logo()
         self.dialogExists = True
-        self.btnNext.setEnabled(False)
-        self.btnStartRound.setDisabled(False)
+        # self.set_small_display(pixmap)
         # self.presentWinningBalls()
 
     def loadNextBall(self):
@@ -342,8 +364,15 @@ class Window(QWidget):
         with open(inputFile, encoding="utf-8-sig") as fp:
             # self.contents = fp.readlines()
             self.contents = [line for line in fp.readlines() if line.strip()]
-        print(f"ALL CONTENTS:{self.contents}")
+        # print(f"ALL CONTENTS:{self.contents}")
         # print("CALLING RUN")
+        self.btnNext.setDisabled(False)
+        if not self.dialogExists:
+            self.dialog = Dialog()
+            self.dialog.setGeometry(50, 50, 300, 300)
+            self.dialog.show()
+            self.dialogExists = True
+
         self.analyzeLine(0)
 
     def getFileName(self):
@@ -389,6 +418,13 @@ class Window(QWidget):
         print(f"LINE:{line}")
         print(f"CURRENT LINE COUNT:{self.lineCount}")
 
+        # END CHECK
+        if re.search("^END$", line):
+            # print(f'END:{line}')
+            self.dialog.show_logo()
+            self.dialog.setCategory("Name That TUNE!")
+            self.btnNext.setDisabled(True)
+
         # CATEGORY CHECK
         if re.search("^[A-Z][a-z]", line):
             # print(f'CATEGORY:{line}')
@@ -416,7 +452,9 @@ class Window(QWidget):
     def updateCategory(self, category):
         print(f"CATEGORY:{category}")
         self.reset()
-        self.currentRoundTitle.setText(category)
+        self.currentRoundTitle.setText(category.strip())
+        self.dialog.setCategory(category)
+        # self.dialog.setQuestion(category)
 
     def updateQuestion(self, question):
         self.lstQuestions.append(question)
@@ -424,14 +462,15 @@ class Window(QWidget):
         self.listboxQuestions.addItems(self.lstQuestions)
         print(f"QUESTION:{question}")
         # self.analyzeLine(self.lineCount)
+        self.dialog.setQuestion(question)
 
     def updateAnswers(self, answer):
+        print(f"ANSWER:{answer}, {len(self.lstAnswers)}")
         self.lstAnswers.append(answer)
         if len(self.lstAnswers) == 5:
             self.listboxAnswers.addItems(self.lstAnswers)
             self.lblAnswers.setVisible(True)
             self.listboxAnswers.setVisible(True)
-        print(f"ANSWER:{answer}")
         # self.analyzeLine(self.lineCount)
 
     def reset(self):
@@ -441,6 +480,7 @@ class Window(QWidget):
         self.lstAnswers.clear()
         self.listboxQuestions.clear()
         self.listboxAnswers.clear()
+        self.dialog.show_logo()
 
 
 if __name__ == "__main__":
