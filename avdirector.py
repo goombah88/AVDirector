@@ -115,7 +115,7 @@ class Dialog(QDialog):
 
     def stopTimer(self):
         self.timer.stop()
-        # self.secondsLeftInTimer = 0
+        self.secondsLeftInTimer = self.timerDuration
         self.lblTimeLeft.setText(str(self.secondsLeftInTimer))
         self.hideTimer()
 
