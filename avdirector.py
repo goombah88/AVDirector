@@ -2,10 +2,6 @@
 
 import random
 import sys
-
-# from os import listdir
-# from os.path import isfile, join
-# from pathlib import Path
 from jproperties import Properties
 import re
 
@@ -34,6 +30,7 @@ class Dialog(QWidget):
         self.setWindowTitle("AVDirector - Party Play Indy")
         self.setStyleSheet("background-color: #00ffc4")
         self.logo = "ppi_logo.jpg"
+        self.timerDuration = 3
 
         self.lblCategory = QLabel("Party Play Indy")
         self.lblCategory.resize(100, 100)
@@ -56,8 +53,21 @@ class Dialog(QWidget):
         pixmap = QPixmap(self.logo)
         self.lblQuestion.setPixmap(pixmap)
 
+        # Timer
+        hboxTimer = QHBoxLayout()
+        self.lblTimeLeft = QLabel()
+        self.lblTimeLeft.setAlignment(Qt.AlignCenter)
+        # self.lblTimeLeft.setText(str(self.secondsLeftInTimer))
+        # #00ffc4
+        self.lblTimeLeft.setStyleSheet(
+            "background-color: yellow; font: 32pt Times"
+        )
+        self.hideTimer()
+        hboxTimer.addWidget(self.lblTimeLeft)
+
         # Pack it all in
         layout = QVBoxLayout(self)
+        layout.addLayout(hboxTimer)
         layout.addWidget(self.lblCategory)
         layout.addWidget(self.lblQuestion)
 
@@ -69,6 +79,7 @@ class Dialog(QWidget):
         pixmap = QPixmap(self.logo)
         self.setCategory("Party Play Indy")
         self.lblQuestion.setPixmap(pixmap)
+        self.hideTimer()
 
     def setCategory(self, text):
         self.lblCategory.setText(text)
@@ -83,6 +94,45 @@ class Dialog(QWidget):
             "background-color: #00ffc4; font: 60pt Times"
         )
         self.lblQuestion.setText(text)
+        self.timer_start()
+
+    def timer_start(self):
+        self.showTimer()
+        self.secondsLeftInTimer = self.timerDuration
+        self.timerCountdown = QTimer(self)
+        self.timerCountdown.timeout.connect(self.timer_timeout)
+        self.timerCountdown.start(1000)
+        _text = " seconds remaining"
+        self.update_gui(str(self.secondsLeftInTimer) + _text)
+
+    def timer_stop(self):
+        self.timerCountdown.stop()
+        self.lblTimeLeft.setText(str(self.secondsLeftInTimer))
+        self.hideTimer()
+
+    def timer_timeout(self):
+        _text = " seconds remaining"
+        if self.secondsLeftInTimer > 0:
+            self.secondsLeftInTimer -= 1
+            counter = str(self.secondsLeftInTimer) + _text
+        else:
+            counter = ""
+            self.timer_stop()
+            self.hideTimer()
+            # self.btnNext.setEnabled(True)
+            # if self.mode == "auto":
+            #     self.loadNextBall()
+            #     self.timerLeft = self.timerDuration
+        self.update_gui(counter)
+
+    def update_gui(self, text):
+        self.lblTimeLeft.setText(text)
+
+    def showTimer(self):
+        self.lblTimeLeft.setVisible(True)
+
+    def hideTimer(self):
+        self.lblTimeLeft.setVisible(False)
 
 
 class Window(QWidget):
@@ -469,6 +519,7 @@ class Window(QWidget):
         self.currentRoundTitle.setText(category.strip())
         self.dialog.setCategory(category)
         # self.dialog.setQuestion(category)
+        self.dialog.hideTimer()
 
     def updateQuestion(self, question):
         self.lstQuestions.append(question)
