@@ -19,18 +19,26 @@ from PyQt5.QtWidgets import (
     QWidget,
     # QComboBox,
     QFileDialog,
+    QDialog,
 )
 
 # QUESTION_DIR = Path("questions/")
+# #00ffc4 - mint green PPI color
 
 
-class Dialog(QWidget):
-    def __init__(self):
-        super().__init__()
+class Dialog(QDialog):
+    def __init__(self, parent):
+        super(Dialog, self).__init__(parent)
         self.setWindowTitle("AVDirector - Party Play Indy")
         self.setStyleSheet("background-color: #00ffc4")
         self.logo = "ppi_logo.jpg"
-        self.timerDuration = 3
+        self.timerDuration = 90
+
+        self.setWindowFlag(Qt.WindowMinimizeButtonHint, True)
+        self.setWindowFlag(Qt.WindowMaximizeButtonHint, True)
+
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.timerCountdown)
 
         self.lblCategory = QLabel("Party Play Indy")
         self.lblCategory.resize(100, 100)
@@ -94,50 +102,53 @@ class Dialog(QWidget):
             "background-color: #00ffc4; font: 60pt Times"
         )
         self.lblQuestion.setText(text)
-        self.timer_start()
+        self.startTimer()
 
-    def timer_start(self):
+    def startTimer(self):
         self.showTimer()
         self.secondsLeftInTimer = self.timerDuration
-        self.timerCountdown = QTimer(self)
-        self.timerCountdown.timeout.connect(self.timer_timeout)
-        self.timerCountdown.start(1000)
+        # self.timerCountdown = QTimer(self)
+        # self.timerCountdown.timeout.connect(self.timer_timeout)
+        self.timer.start(1000)
         _text = " seconds remaining"
-        self.update_gui(str(self.secondsLeftInTimer) + _text)
+        self.updateTimer(str(self.secondsLeftInTimer) + _text)
 
-    def timer_stop(self):
-        self.timerCountdown.stop()
+    def stopTimer(self):
+        self.timer.stop()
+        # self.secondsLeftInTimer = 0
         self.lblTimeLeft.setText(str(self.secondsLeftInTimer))
         self.hideTimer()
 
-    def timer_timeout(self):
+    def timerCountdown(self):
         _text = " seconds remaining"
         if self.secondsLeftInTimer > 0:
             self.secondsLeftInTimer -= 1
             counter = str(self.secondsLeftInTimer) + _text
         else:
             counter = ""
-            self.timer_stop()
+            self.stopTimer()
             self.hideTimer()
             # self.btnNext.setEnabled(True)
             # if self.mode == "auto":
             #     self.loadNextBall()
             #     self.timerLeft = self.timerDuration
-        self.update_gui(counter)
+        self.updateTimer(counter)
 
-    def update_gui(self, text):
+    def updateTimer(self, text):
         self.lblTimeLeft.setText(text)
+        self.parent().lblTimer.setText(text)
 
     def showTimer(self):
         self.lblTimeLeft.setVisible(True)
 
     def hideTimer(self):
         self.lblTimeLeft.setVisible(False)
+        # self.timer_stop()
 
 
 class Window(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self):
+        super().__init__()
 
         # Set some defaults
         self.title = "AVDirector - Party Play Indy"
@@ -152,30 +163,6 @@ class Window(QWidget):
 
         self.selectedBalls = []
 
-        # self.app = QApplication.instance()
-        # self.screens_available = self.app.screens()
-        # print("screens:", self.screens_available)
-        # if self.screens_available == 0:
-        #     self.selected_screen = 0
-        # else:
-        #     self.selected_screen = 1
-
-        # self.screen = self.screens_available[self.selected_screen]
-        # self.screen_width = self.screen.size().width()
-        # self.screen_height = self.screen.size().height()
-        # # Good default screen height for modern screens
-        # self.screen_height = 1920
-
-        # Get path to chrome
-        # if platform.system() == "Linux":
-        #     # Linux
-        #     import termios
-        #     chrome_path = '/usr/bin/google-chrome'
-        # else:
-        #     # Windows
-        #     chrome_path =
-        # 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'
-
         # Separate module for GUI?
         self.InitWindow()
 
@@ -183,10 +170,18 @@ class Window(QWidget):
         self.setWindowTitle(self.title)
         self.setGeometry(550, 350, 650, 450)
 
-        self.lblCurrentRoundTitle = QLabel("Current Round: ")
-        self.lblCurrentRoundTitle.setAlignment(Qt.AlignLeft)
-        self.currentRoundTitle = QLabel()
-        self.currentRoundTitle.setAlignment(Qt.AlignLeft)
+        self.lblForCurrentRoundTitle = QLabel("Current Round: ")
+        self.lblForCurrentRoundTitle.setMaximumWidth(125)
+        self.lblForCurrentRoundTitle.setAlignment(Qt.AlignLeft)
+        self.lblCurrentRoundCategory = QLabel()
+        self.lblCurrentRoundCategory.setAlignment(Qt.AlignLeft)
+
+        # Timer Label
+        self.lblForTimer = QLabel("Timer Left: ")
+        self.lblForTimer.setMaximumWidth(75)
+        self.lblForTimer.setAlignment(Qt.AlignLeft)
+        self.lblTimer = QLabel()
+        self.lblTimer.setAlignment(Qt.AlignLeft)
 
         # StartRound Button
         self.btnStartRound = QPushButton("Start Round")
@@ -252,24 +247,26 @@ class Window(QWidget):
         ###
 
         hboxCurrentCategory = QHBoxLayout()
-        hboxCurrentCategory.addWidget(self.lblCurrentRoundTitle)
-        hboxCurrentCategory.addWidget(self.currentRoundTitle)
+        hboxCurrentCategory.addWidget(self.lblForCurrentRoundTitle)
+        hboxCurrentCategory.addWidget(self.lblCurrentRoundCategory)
 
         # Now add everything into the display
-        hboxRoundControlButtons = QHBoxLayout()
         vboxButtons = QVBoxLayout()
-        # vboxButtons.addWidget(self.btnStartRound)
-        # vboxButtons.addWidget(self.btnEndRound)
+        hboxRoundControlButtons = QHBoxLayout()
+        hboxTimer = QHBoxLayout()
+        hboxTimer.addWidget(self.lblForTimer)
+        hboxTimer.addWidget(self.lblTimer)
         # hboxRoundControlButtons.addWidget(self.comboCategories)
-        hboxRoundControlButtons.addLayout(vboxButtons)
+        vboxButtons.addLayout(hboxTimer)
+        vboxButtons.addLayout(hboxRoundControlButtons)
         hboxRoundControlButtons.addWidget(self.btnNext)
         hboxRoundControlButtons.addWidget(self.btnShowLogo)
         hboxRoundControlButtons.addLayout(vboxSmallDisplay)
 
         vboxMaster.addWidget(self.btnLoadFile)
         vboxMaster.addLayout(hboxCurrentCategory)
-        vboxMaster.addWidget(self.currentRoundTitle)
-        vboxMaster.addLayout(hboxRoundControlButtons)
+        vboxMaster.addWidget(self.lblCurrentRoundCategory)
+        vboxMaster.addLayout(vboxButtons)
 
         hboxQandA = QHBoxLayout()
         vboxQuestions = QVBoxLayout()
@@ -312,7 +309,7 @@ class Window(QWidget):
         self.btnNext.setEnabled(True)
         self.listboxQuestions.clear()
         if not self.dialogExists:
-            self.dialog = Dialog()
+            self.dialog = Dialog(parent=self)
             self.dialog.setGeometry(50, 50, 300, 300)
             self.dialog.show()
             self.btnNext.setDisabled(False)
@@ -321,8 +318,8 @@ class Window(QWidget):
     def showLogoInDialog(self):
         self.activeRound = False
         if not self.dialogExists:
-            self.dialog = Dialog()
-            self.dialog.setGeometry(50, 50, 300, 300)
+            self.dialog = Dialog(parent=self)
+            # self.dialog.setGeometry(50, 50, 300, 300)
             self.dialog.show()
         self.dialog.show_logo()
         self.dialogExists = True
@@ -399,7 +396,7 @@ class Window(QWidget):
         # self.lbxQuestions.insertItem(0, configs.get("question1").data)
 
         # Set full category name
-        self.currentRoundTitle.setText(configs.get("name").data)
+        self.lblCurrentRoundCategory.setText(configs.get("name").data)
 
         # _venues = list(configs.get("venues").data)
         # print(f'VENUES: {_venues}')
@@ -432,7 +429,7 @@ class Window(QWidget):
         # print("CALLING RUN")
         self.btnNext.setDisabled(False)
         if not self.dialogExists:
-            self.dialog = Dialog()
+            self.dialog = Dialog(parent=self)
             self.dialog.setGeometry(50, 50, 300, 300)
             self.dialog.show()
             self.dialogExists = True
@@ -516,10 +513,10 @@ class Window(QWidget):
     def updateCategory(self, category):
         print(f"CATEGORY:{category}")
         self.reset()
-        self.currentRoundTitle.setText(category.strip())
+        self.lblCurrentRoundCategory.setText(category.strip())
         self.dialog.setCategory(category)
         # self.dialog.setQuestion(category)
-        self.dialog.hideTimer()
+        self.dialog.stopTimer()
 
     def updateQuestion(self, question):
         self.lstQuestions.append(question)
