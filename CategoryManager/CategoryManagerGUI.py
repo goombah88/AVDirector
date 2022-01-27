@@ -44,7 +44,6 @@ class CategoryManager(QWidget):
         self.setGeometry(550, 350, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
 
         vboxMain = QVBoxLayout()
-        
 
 
 if __name__ == "__main__":
