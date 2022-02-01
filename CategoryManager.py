@@ -1,6 +1,9 @@
 import sys
 from jproperties import Properties
-from models.Category import Category
+import configparser
+
+
+# from models.Category import Category
 
 
 # from PyQt5.QtCore import QSize, Qt, QTimer
@@ -25,6 +28,8 @@ from PyQt5.QtWidgets import (
 MAIN_WINDOW_HEIGHT = 500
 MAIN_WINDOW_WIDTH = 700
 CATEGORY_CONFIG_FILE_EXT = ".ppc"
+QUESTION_BOX_HEIGHT = 75
+QUESTION_BOX_WIDTH = 400
 
 
 class CategoryManager(QWidget):
@@ -66,13 +71,14 @@ class CategoryManager(QWidget):
         hboxQ1 = QHBoxLayout()
         lblQ1 = QLabel("Question 1:")
         self.txtQ1 = QPlainTextEdit(self)
-        self.txtQ1.setLineWidth(400)
-        self.txtQ1.setFixedHeight(100)
+        self.txtQ1.setLineWidth(QUESTION_BOX_WIDTH)
+        self.txtQ1.setFixedHeight(QUESTION_BOX_HEIGHT)
         hboxQ1.addWidget(lblQ1)
         hboxQ1.addWidget(self.txtQ1)
         hboxA1 = QHBoxLayout()
         lblA1 = QLabel("Answer 1:")
         self.txtA1 = QLineEdit()
+        self.txtA1
         hboxA1.addWidget(lblA1)
         hboxA1.addWidget(self.txtA1)
         vboxMaster.addLayout(hboxQ1)
@@ -82,8 +88,8 @@ class CategoryManager(QWidget):
         hboxQ2 = QHBoxLayout()
         lblQ2 = QLabel("Question 2:")
         self.txtQ2 = QPlainTextEdit(self)
-        self.txtQ2.setLineWidth(400)
-        self.txtQ2.setFixedHeight(100)
+        self.txtQ2.setLineWidth(QUESTION_BOX_WIDTH)
+        self.txtQ2.setFixedHeight(QUESTION_BOX_HEIGHT)
         hboxQ2.addWidget(lblQ2)
         hboxQ2.addWidget(self.txtQ2)
         hboxA2 = QHBoxLayout()
@@ -98,8 +104,8 @@ class CategoryManager(QWidget):
         hboxQ3 = QHBoxLayout()
         lblQ3 = QLabel("Question 3:")
         self.txtQ3 = QPlainTextEdit(self)
-        self.txtQ3.setLineWidth(400)
-        self.txtQ3.setFixedHeight(100)
+        self.txtQ3.setLineWidth(QUESTION_BOX_WIDTH)
+        self.txtQ3.setFixedHeight(QUESTION_BOX_HEIGHT)
         hboxQ3.addWidget(lblQ3)
         hboxQ3.addWidget(self.txtQ3)
         hboxA3 = QHBoxLayout()
@@ -114,8 +120,8 @@ class CategoryManager(QWidget):
         hboxQ4 = QHBoxLayout()
         lblQ4 = QLabel("Question 4:")
         self.txtQ4 = QPlainTextEdit(self)
-        self.txtQ4.setLineWidth(400)
-        self.txtQ4.setFixedHeight(100)
+        self.txtQ4.setLineWidth(QUESTION_BOX_WIDTH)
+        self.txtQ4.setFixedHeight(QUESTION_BOX_HEIGHT)
         hboxQ4.addWidget(lblQ4)
         hboxQ4.addWidget(self.txtQ4)
         hboxA4 = QHBoxLayout()
@@ -130,8 +136,8 @@ class CategoryManager(QWidget):
         hboxQ5 = QHBoxLayout()
         lblQ5 = QLabel("Question 5:")
         self.txtQ5 = QPlainTextEdit(self)
-        self.txtQ5.setLineWidth(400)
-        self.txtQ5.setFixedHeight(100)
+        self.txtQ5.setLineWidth(QUESTION_BOX_WIDTH)
+        self.txtQ5.setFixedHeight(QUESTION_BOX_HEIGHT)
         hboxQ5.addWidget(lblQ5)
         hboxQ5.addWidget(self.txtQ5)
         hboxA5 = QHBoxLayout()
@@ -149,67 +155,84 @@ class CategoryManager(QWidget):
         fileName = "questions/abc.ppc"
         ###
         # Read in the properties file
-        questionsDict = {}
-        configs = Properties()
-        with open(fileName, "rb") as qFile:
-            configs.load(qFile)
-        items_view = configs.items()
-        for item in items_view:
-            questionsDict[item[0]] = item[1].data
-            print(f"adding: {item[1].data}")
-        print(f"CONTENTS OF DICT: {questionsDict}")
+        # dictContent = {}
+        # configs = Properties()
+        # with open(fileName, "rb") as qFile:
+        #     configs.load(qFile)
+        # items_view = configs.items()
+        # for item in items_view:
+        #     dictContent[item[0]] = item[1].data
+        #     print(f"adding: {item[1].data}")
+        # print(f"CONTENTS OF DICT: {dictContent}")
 
-        for item in range(1, 6):
-            if configs.get("question1"):
-                print(f"doing {item}")
-                self.txtQ1.setPlainText(configs.get("question1").data)
-                self.txtA1.setText(configs.get("answer1").data)
-        else:
-            print("skipping 1")
+        # for item in range(1, 6):
+        #     if configs.get("question1"):
+        #         print(f"doing {item}")
+        #         self.txtQ1.setPlainText(configs.get("question1").data)
+        #         self.txtA1.setText(configs.get("answer1").data)
+        # else:
+        #     print("skipping 1")
 
+        configs = configparser.SafeConfigParser()
+        configs.read(fileName)
         # Populate fields from chosen file
         # if questionsDict.get("question1"):
         #     print("doing Q1")
-        self.txtQ1.setPlainText(
-            configs.get("question1").data
-        ) if questionsDict.get("question1") else self.txtQ1.setPlainText(
-            "default value"
-        )
-        self.txtA1.setText(configs.get("answer1").data) if questionsDict.get(
-            "answer1"
-        ) else self.txtA1.setText("default answer")
-        self.txtQ2.setPlainText(
-            configs.get("question2").data
-        ) if questionsDict.get("question2") else self.txtQ2.setPlainText(
-            "default value"
-        )
-        self.txtA2.setText(configs.get("answer2").data) if questionsDict.get(
-            "answer2"
-        ) else self.txtA2.setText("default answer")
-        self.txtQ3.setPlainText(
-            configs.get("question3").data
-        ) if questionsDict.get("question3") else self.txtQ3.setPlainText(
-            "default value"
-        )
-        self.txtA3.setText(configs.get("answer3").data) if questionsDict.get(
-            "answer3"
-        ) else self.txtA3.setText("default answer")
-        self.txtQ4.setPlainText(
-            configs.get("question4").data
-        ) if questionsDict.get("question4") else self.txtQ4.setPlainText(
-            "default value"
-        )
-        self.txtA4.setText(configs.get("answer4").data) if questionsDict.get(
-            "answer4"
-        ) else self.txtA4.setText("default answer")
-        self.txtQ5.setPlainText(
-            configs.get("question5").data
-        ) if questionsDict.get("question5") else self.txtQ5.setPlainText(
-            "default value"
-        )
-        self.txtA5.setText(configs.get("answer5").data) if questionsDict.get(
-            "answer5"
-        ) else self.txtA5.setText("default answer")
+        q1 = configs["CONTENT"]["question1"]
+        a1 = configs["CONTENT"]["answer1"]
+        q2 = configs["CONTENT"]["question2"]
+        a2 = configs["CONTENT"]["answer2"]
+        q3 = configs["CONTENT"]["question3"]
+        a3 = configs["CONTENT"]["answer3"]
+        q4 = configs["CONTENT"]["question4"]
+        a4 = configs["CONTENT"]["answer4"]
+        q5 = configs["CONTENT"]["question5"]
+        a5 = configs["CONTENT"]["answer5"]
+        self.txtQ1.setPlainText(q1)
+        self.txtA1.setText(a1)
+        self.txtQ2.setPlainText(q2)
+        self.txtA2.setText(a2)
+        self.txtQ3.setPlainText(q3)
+        self.txtA3.setText(a3)
+
+        # if dictContent.get("question1") else self.txtQ1.setPlainText(
+        #     "default value"
+        # )
+        # self.txtA1.setText(configs.get("answer1").data) if dictContent.get(
+        #     "answer1"
+        # ) else self.txtA1.setText("default answer")
+        # self.txtQ2.setPlainText(
+        #     configs.get("question2").data
+        # ) if dictContent.get("question2") else self.txtQ2.setPlainText(
+        #     "default value"
+        # )
+        # self.txtA2.setText(configs.get("answer2").data) if dictContent.get(
+        #     "answer2"
+        # ) else self.txtA2.setText("default answer")
+        # self.txtQ3.setPlainText(
+        #     configs.get("question3").data
+        # ) if dictContent.get("question3") else self.txtQ3.setPlainText(
+        #     "default value"
+        # )
+        # self.txtA3.setText(configs.get("answer3").data) if dictContent.get(
+        #     "answer3"
+        # ) else self.txtA3.setText("default answer")
+        # self.txtQ4.setPlainText(
+        #     configs.get("question4").data
+        # ) if dictContent.get("question4") else self.txtQ4.setPlainText(
+        #     "default value"
+        # )
+        # self.txtA4.setText(configs.get("answer4").data) if dictContent.get(
+        #     "answer4"
+        # ) else self.txtA4.setText("default answer")
+        # self.txtQ5.setPlainText(
+        #     configs.get("question5").data
+        # ) if dictContent.get("question5") else self.txtQ5.setPlainText(
+        #     "default value"
+        # )
+        # self.txtA5.setText(configs.get("answer5").data) if dictContent.get(
+        #     "answer5"
+        # ) else self.txtA5.setText("default answer")
 
         """
         self.txtQ1.setPlainText(configs.get("question1").data)\
@@ -235,34 +258,43 @@ class CategoryManager(QWidget):
         fileName = "questions/abc"
         self.activeCategoryConfig = fileName + CATEGORY_CONFIG_FILE_EXT
 
-        cat = Category("why?", "beCuz")
-        print(f"BEFORE Q1:{cat.q1}, A1:{cat.a1}")
-        Category.q1 = "questionONE"
-        Category.a1 = "answerONE"
-        print(f"AFTER Q1:{cat.q1}, A1:{cat.a1}")
+        # cat = Category("why?", "beCuz")
+        # print(f"BEFORE Q1:{cat.q1}, A1:{cat.a1}")
+        # Category.q1 = "questionONE"
+        # Category.a1 = "answerONE"
+        # print(f"AFTER Q1:{cat.q1}, A1:{cat.a1}")
 
-        configs = Properties()
+        # configs = Properties()
         # if not configs["question3"]:
         print("writing to file.")
-        configs["question2"] = self.txtQ2.toPlainText()
-        configs["answer2"] = self.txtA2.text()
-        with open(self.activeCategoryConfig, "r+b") as f:
-            # configs.store(f, encoding="utf-8")
-            print(
-                f'AFTER Q1:{configs.get("question1").data}, A1:{configs.get("answer1").data}'
-            )
-        # Populate fields from chosen file
-        # self.txtQ1.setPlainText(configs.get("question1").data)
-        # self.txtA1.setText(configs.get("answer1").data)
-        # self.txtQ2.setPlainText(configs.get("question2").data)
-        # self.txtA2.setText(configs.get("answer2").data)
-        # self.txtQ3.setPlainText(configs.get("question3").data)
-        # self.txtA3.setText(configs.get("answer3").data)
-        # self.txtQ4.setPlainText(configs.get("question4").data)
-        # self.txtA4.setText(configs.get("answer4").data)
-        # self.txtQ5.setPlainText(configs.get("question5").data)
-        # self.txtA5.setText(configs.get("answer5").data)
+        # configs["question1"] = self.txtQ1.toPlainText()
+        # configs["answer1"] = self.txtA1.text()
+        # configs["question2"] = self.txtQ2.toPlainText()
+        # configs["answer2"] = self.txtA2.text()
 
+        # configs["question4"] = self.txtQ4.toPlainText()
+        # configs["answer4"] = self.txtA4.text()
+        # configs["question5"] = self.txtQ5.toPlainText()
+        # configs["answer5"] = self.txtA5.text()
+
+        # with open(self.activeCategoryConfig, "wb") as f:
+        #     configs.store(f, encoding="utf-8")
+        # print(
+        #     f'AFTER Q1:{configs.get("question1").data}, \
+        #     A1:{configs.get("answer1").data}'
+        # )
+
+        configs = configparser.SafeConfigParser()
+        configs.read(self.activeCategoryConfig)
+        x = configs["CONTENT"]["question3"]
+        print(f"q3:{x}")
+        self.txtQ3.setPlainText(x)
+        # configs.set("CONTENT", "question3", self.txtQ3.toPlainText())
+        # configs.set("CONTENT", "answer3", self.txtA3.text())
+        # configs.write(self.activeCategoryConfig)
+        with open(self.activeCategoryConfig, "w") as f:
+            configs.write(f)
+        configs.read(self.activeCategoryConfig)
         # print(f'Full name: {configs.get("name").data}')
         # print(f'Question 1: {configs.get("question1").data}')
         # print(f'Answer 1: {configs.get("answer1").data}')
