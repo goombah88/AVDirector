@@ -1,6 +1,7 @@
 import sys
-from jproperties import Properties
+# from jproperties import Properties
 import configparser
+from os.path import basename, splitext
 
 
 # from models.Category import Category
@@ -19,7 +20,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
     # QComboBox,
-    # QFileDialog,
+    QFileDialog,
     # QDialog,
     QLineEdit,
     QPlainTextEdit,
@@ -66,6 +67,10 @@ class CategoryManager(QWidget):
         btnSave.clicked.connect(self.saveConfigToFile)
         hboxButtons.addWidget(btnSave)
         vboxMaster.addLayout(hboxButtons)
+
+        # LABEL
+        self.lblInfo = QLabel("Load a file to begin editing")
+        vboxMaster.addWidget(self.lblInfo)
 
         # QUESTION 1
         hboxQ1 = QHBoxLayout()
@@ -152,7 +157,7 @@ class CategoryManager(QWidget):
 
     def loadFile(self):
         # TESTING
-        fileName = "questions/abc.ppc"
+        # fileName = "questions/abc.ppc"
         ###
         # Read in the properties file
         # dictContent = {}
@@ -173,11 +178,21 @@ class CategoryManager(QWidget):
         # else:
         #     print("skipping 1")
 
-        configs = configparser.SafeConfigParser()
-        configs.read(fileName)
+        configs = configparser.ConfigParser()
+        configs.read(self.getFileName())
+
+        self.activeFileName = self.fileName
+        self.activeCategory = splitext(basename(self.activeFileName))[0]
+        # print(f'basename:{basename(self.fileName)},\
+        #     with strip:{basename(self.fileName).strip(CATEGORY_CONFIG_FILE_EXT)}')
+        self.updateInfoLabel(self.activeCategory)
+        print(f'active file is {self.activeFileName}')
         # Populate fields from chosen file
         # if questionsDict.get("question1"):
         #     print("doing Q1")
+
+        # Hard-coded for now
+        # TODO: Make question/answer count variable
         q1 = configs["CONTENT"]["question1"]
         a1 = configs["CONTENT"]["answer1"]
         q2 = configs["CONTENT"]["question2"]
@@ -194,6 +209,10 @@ class CategoryManager(QWidget):
         self.txtA2.setText(a2)
         self.txtQ3.setPlainText(q3)
         self.txtA3.setText(a3)
+        self.txtQ4.setPlainText(q4)
+        self.txtA4.setText(a4)
+        self.txtQ5.setPlainText(q5)
+        self.txtA5.setText(a5)
 
         # if dictContent.get("question1") else self.txtQ1.setPlainText(
         #     "default value"
@@ -254,9 +273,26 @@ class CategoryManager(QWidget):
         self.txtA5.setText(configs.get("answer5").data)
         """
 
+    def getFileName(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        self.fileName, _ = QFileDialog.getOpenFileName(
+            self,
+            "QFileDialog.getOpenFileName()",
+            "questions/",
+            # "All Files (*);;Python Files (*.py)",
+            "Party Play Indy Category Files (*.ppc)",
+            options=options,
+        )
+        if self.fileName:
+            print(f"file: {self.fileName}")
+            return self.fileName
+            # self.run(self.fileName)
+            # Read text file to list
+
     def saveConfigToFile(self):
-        fileName = "questions/abc"
-        self.activeCategoryConfig = fileName + CATEGORY_CONFIG_FILE_EXT
+        # fileName = "questions/abc"
+        # self.activeCategoryConfig = fileName + CATEGORY_CONFIG_FILE_EXT
 
         # cat = Category("why?", "beCuz")
         # print(f"BEFORE Q1:{cat.q1}, A1:{cat.a1}")
@@ -284,17 +320,25 @@ class CategoryManager(QWidget):
         #     A1:{configs.get("answer1").data}'
         # )
 
-        configs = configparser.SafeConfigParser()
-        configs.read(self.activeCategoryConfig)
-        x = configs["CONTENT"]["question3"]
-        print(f"q3:{x}")
-        self.txtQ3.setPlainText(x)
-        # configs.set("CONTENT", "question3", self.txtQ3.toPlainText())
-        # configs.set("CONTENT", "answer3", self.txtA3.text())
+        configs = configparser.ConfigParser()
+        configs.read(self.activeFileName)
+        # x = configs["CONTENT"]["question3"]
+        # print(f"q3:{x}")
+        # self.txtQ3.setPlainText(x)
+        configs.set("CONTENT", "question1", self.txtQ1.toPlainText())
+        configs.set("CONTENT", "answer1", self.txtA1.text())
+        configs.set("CONTENT", "question2", self.txtQ2.toPlainText())
+        configs.set("CONTENT", "answer2", self.txtA2.text())
+        configs.set("CONTENT", "question3", self.txtQ3.toPlainText())
+        configs.set("CONTENT", "answer3", self.txtA3.text())
+        configs.set("CONTENT", "question4", self.txtQ4.toPlainText())
+        configs.set("CONTENT", "answer4", self.txtA4.text())
+        configs.set("CONTENT", "question5", self.txtQ5.toPlainText())
+        configs.set("CONTENT", "answer5", self.txtA5.text())
         # configs.write(self.activeCategoryConfig)
-        with open(self.activeCategoryConfig, "w") as f:
+        with open(self.activeFileName, "w") as f:
             configs.write(f)
-        configs.read(self.activeCategoryConfig)
+        # configs.read(self.activeCategoryConfig)
         # print(f'Full name: {configs.get("name").data}')
         # print(f'Question 1: {configs.get("question1").data}')
         # print(f'Answer 1: {configs.get("answer1").data}')
@@ -337,6 +381,9 @@ class CategoryManager(QWidget):
         print(f"STATUS: {_status}")
         print(f"STATUS TYPE: {type(_status)}")
         """
+
+    def updateInfoLabel(self, text):
+        self.lblInfo.setText("You are editing " + text)
 
 
 if __name__ == "__main__":
