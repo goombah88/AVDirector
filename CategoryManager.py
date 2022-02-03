@@ -2,7 +2,7 @@ import sys
 
 # from jproperties import Properties
 import configparser
-from os.path import basename, splitext
+from os.path import basename, splitext, exists
 
 
 # from models.Category import Category
@@ -63,10 +63,16 @@ class CategoryManager(QWidget):
         btnLoad.clicked.connect(self.loadFile)
         hboxButtons.addWidget(btnLoad)
 
-        # BUTTON
+        # SAVE BUTTON
         btnSave = QPushButton("Save")
         btnSave.clicked.connect(self.saveConfigToFile)
         hboxButtons.addWidget(btnSave)
+
+        # NEW BUTTON
+        btnNew = QPushButton("New")
+        btnNew.clicked.connect(self.newCategory)
+        hboxButtons.addWidget(btnNew)
+
         vboxMaster.addLayout(hboxButtons)
 
         # LABEL
@@ -82,7 +88,7 @@ class CategoryManager(QWidget):
         hboxQ1.addWidget(lblQ1)
         hboxQ1.addWidget(self.txtQ1)
         hboxA1 = QHBoxLayout()
-        lblA1 = QLabel("            Answer 1:")
+        lblA1 = QLabel("                Answer 1:")
         self.txtA1 = QLineEdit()
         hboxA1.addWidget(lblA1)
         hboxA1.addWidget(self.txtA1)
@@ -98,7 +104,7 @@ class CategoryManager(QWidget):
         hboxQ2.addWidget(lblQ2)
         hboxQ2.addWidget(self.txtQ2)
         hboxA2 = QHBoxLayout()
-        lblA2 = QLabel("            Answer 2:")
+        lblA2 = QLabel("                Answer 2:")
         self.txtA2 = QLineEdit()
         hboxA2.addWidget(lblA2)
         hboxA2.addWidget(self.txtA2)
@@ -114,7 +120,7 @@ class CategoryManager(QWidget):
         hboxQ3.addWidget(lblQ3)
         hboxQ3.addWidget(self.txtQ3)
         hboxA3 = QHBoxLayout()
-        lblA3 = QLabel("Answer 3:")
+        lblA3 = QLabel("                Answer 3:")
         self.txtA3 = QLineEdit()
         hboxA3.addWidget(lblA3)
         hboxA3.addWidget(self.txtA3)
@@ -130,7 +136,7 @@ class CategoryManager(QWidget):
         hboxQ4.addWidget(lblQ4)
         hboxQ4.addWidget(self.txtQ4)
         hboxA4 = QHBoxLayout()
-        lblA4 = QLabel("Answer 4:")
+        lblA4 = QLabel("                Answer 4:")
         self.txtA4 = QLineEdit()
         hboxA4.addWidget(lblA4)
         hboxA4.addWidget(self.txtA4)
@@ -146,7 +152,7 @@ class CategoryManager(QWidget):
         hboxQ5.addWidget(lblQ5)
         hboxQ5.addWidget(self.txtQ5)
         hboxA5 = QHBoxLayout()
-        lblA5 = QLabel("Answer 5:")
+        lblA5 = QLabel("                Answer 5:")
         self.txtA5 = QLineEdit()
         hboxA5.addWidget(lblA5)
         hboxA5.addWidget(self.txtA5)
@@ -157,7 +163,7 @@ class CategoryManager(QWidget):
 
     def loadFile(self):
         # TESTING
-        # fileName = "questions/abc.ppc"
+        # fileName = "categories/abc.ppc"
         ###
         # Read in the properties file
         # dictContent = {}
@@ -221,13 +227,13 @@ class CategoryManager(QWidget):
         self.fileName, _ = QFileDialog.getOpenFileName(
             self,
             "QFileDialog.getOpenFileName()",
-            "questions/",
+            "categories/",
             # "All Files (*);;Python Files (*.py)",
             "Party Play Indy Category Files (*.ppc)",
             options=options,
         )
         if self.fileName:
-            print(f"file: {self.fileName}")
+            print(f"opening file: {self.fileName}")
             return self.fileName
 
     def saveConfigToFile(self):
@@ -311,12 +317,30 @@ class CategoryManager(QWidget):
         print(f"STATUS TYPE: {type(_status)}")
         """
 
+    def newCategory(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getSaveFileName(self, "QFileDialog.getSaveFileName()",
+                                                  "categories/", "Party Play Indy Category Files (*.ppc)",
+                                                  options=options)
+        if fileName:
+            print(fileName)
+
+        configs = configparser.ConfigParser()
+        configs.read(fileName)
+        configs.set("CONTENT", "question1", self.txtQ1.toPlainText())
+        configs.set("CONTENT", "answer1", self.txtA1.text())
+
+        # https://stackoverflow.com/questions/44907415/configparser-create-file-if-it-doesnt-exist
+        with open(fileName, "ab") as f:
+            configs.add_section("[META]")
+            configs.add_section("[CONTENT]")
+            configs.write(f)
+
     def updateInfoLabel(self, text):
         self.lblInfo.setText(
-            '<div style="font-family: Times; font-size: 30px;\
-                font-style: bold; font-weight: bold;">You are editing '
-            + text
-            + "</div>"
+            'You are editing <div style="font-family: Times; font-size: 30px;\
+                font-style: bold; font-weight: bold;">' + text + "</div>"
         )
 
 
