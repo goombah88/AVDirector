@@ -75,7 +75,6 @@ class CategoryManager(QWidget):
 
         # QUESTION 1
         hboxQ1 = QHBoxLayout()
-        hboxQ1.set
         lblQ1 = QLabel("Question 1:")
         self.txtQ1 = QPlainTextEdit(self)
         self.txtQ1.setLineWidth(QUESTION_BOX_WIDTH)
@@ -85,7 +84,6 @@ class CategoryManager(QWidget):
         hboxA1 = QHBoxLayout()
         lblA1 = QLabel("            Answer 1:")
         self.txtA1 = QLineEdit()
-        self.txtA1
         hboxA1.addWidget(lblA1)
         hboxA1.addWidget(self.txtA1)
         vboxMaster.addLayout(hboxQ1)
