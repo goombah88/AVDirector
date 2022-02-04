@@ -2,7 +2,7 @@ import sys
 
 # from jproperties import Properties
 import configparser
-from os.path import basename, splitext, exists
+from os.path import exists, basename
 from dateutil.rrule import rrule, WEEKLY, MO
 
 # from models.Category import Category
@@ -71,7 +71,9 @@ class CardManager(QWidget):
         hboxButtons = QHBoxLayout()
 
         # LABEL
-        self.lblInfo = QLabel("<b>Load a file to edit or start creating a new Card.</b>")
+        self.lblInfo = QLabel(
+            "<b>Load a Card to edit or start creating a new Card.</b>"
+        )
         vboxMaster.addWidget(self.lblInfo)
 
         # LOAD BUTTON
@@ -90,6 +92,13 @@ class CardManager(QWidget):
         # hboxButtons.addWidget(btnNew)
 
         vboxMaster.addLayout(hboxButtons)
+
+        hboxCategoryName = QHBoxLayout()
+        lblCategoryName = QLabel("Full Name for this Category: ")
+        self.txtCategoryName = QLineEdit()
+        hboxCategoryName.addWidget(lblCategoryName)
+        hboxCategoryName.addWidget(self.txtCategoryName)
+        vboxMaster.addLayout(hboxCategoryName)
 
         hboxMondays = QHBoxLayout()
         lblMondays = QLabel("This is for the week of (appended to filename): ")
@@ -201,6 +210,7 @@ class CardManager(QWidget):
         configs.read(self.activeFileName)
 
         self.activeCategory = configs["META"]["name"]
+        self.txtCategoryName.setText(self.activeCategory)
         # self.activeCategory = splitext(basename(self.activeFileName))[0]
         # print(f"active category is {self.activeCategory}")
 
@@ -252,14 +262,17 @@ class CardManager(QWidget):
             return fileName
 
     def saveConfigToFile(self):
-        print("writing to file.")
+        print("saving to file.")
         fileName = self.getSaveFileName()
         configs = configparser.ConfigParser()
         configs.read(fileName)
-        # x = configs["CONTENT"]["question3"]
-        # print(f"q3:{x}")
-        # self.txtQ3.setPlainText(x)
-        configs.set("META", "name", self.txtQ1.toPlainText())
+
+        if self.txtCategoryName.text():
+            catName = self.txtCategoryName.text()
+        else:
+            catName = basename(fileName).replace(CATEGORY_FILE_EXT, "")
+
+        configs.set("META", "name", catName)
         configs.set("META", "venues_used", self.txtQ1.toPlainText())
         configs.set("CONTENT", "question1", self.txtQ1.toPlainText())
         configs.set("CONTENT", "answer1", self.txtA1.text())
@@ -285,7 +298,12 @@ class CardManager(QWidget):
         fileName, _ = QFileDialog.getSaveFileName(
             self,
             "QFileDialog.getOpenFileName()",
-            "%s%s" % (CATEGORIES_FOLDER, self.selectedMonday),
+            "%s%s_%s"
+            % (
+                CATEGORIES_FOLDER,
+                self.sanitize_filename(self.txtCategoryName.text()),
+                self.selectedMonday,
+            ),
             # "All Files (*);;Python Files (*.py)",
             "Party Play Indy Category Files (*.ppc)",
             options=options,
@@ -296,7 +314,7 @@ class CardManager(QWidget):
             self.createNewCategoryFile(fileName)
             return fileName
         else:
-            print(f'file does not exist. creating {fileName}')
+            print(f"file does not exist. creating {fileName}")
 
     def createNewCategoryFile(self, fileName):
         # options = QFileDialog.Options()
@@ -319,17 +337,11 @@ class CardManager(QWidget):
             configs.add_section("META")
             configs.add_section("CONTENT")
             configs.write(open(fileName, "w"))
-        else:
-            configs.read(fileName)
-
-        configs.set("CONTENT", "question1", self.txtQ1.toPlainText())
-        configs.set("CONTENT", "answer1", self.txtA1.text())
+        # else:
+        #     configs.read(fileName)
 
         with open(fileName, "w") as f:
             configs.write(f)
-
-    def setContent(self):
-        pass
 
     def updateInfoLabel(self, text):
         self.lblInfo.setText(
