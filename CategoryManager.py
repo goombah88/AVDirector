@@ -3,7 +3,7 @@ import sys
 # from jproperties import Properties
 import configparser
 from os.path import basename, splitext, exists
-
+from dateutil.rrule import rrule, WEEKLY, MO
 
 # from models.Category import Category
 
@@ -20,7 +20,7 @@ from PyQt5.QtWidgets import (
     # QSizePolicy,
     QVBoxLayout,
     QWidget,
-    # QComboBox,
+    QComboBox,
     QFileDialog,
     # QDialog,
     QLineEdit,
@@ -29,7 +29,7 @@ from PyQt5.QtWidgets import (
 
 MAIN_WINDOW_HEIGHT = 500
 MAIN_WINDOW_WIDTH = 700
-CATEGORY_CONFIG_FILE_EXT = ".ppc"
+CATEGORY_FILE_EXT = ".ppc"
 QUESTION_BOX_HEIGHT = 75
 QUESTION_BOX_WIDTH = 400
 
@@ -45,6 +45,16 @@ class CategoryManager(QWidget):
         self.dialogExists = False
         self.lstQuestions = []
         self.lstAnswers = []
+        self.listOfNext52Mondays = []
+
+        # List the next 52 Mondays
+        for date in rrule(WEEKLY, byweekday=MO, count=52):
+            self.listOfNext52Mondays.append(
+                f"{date.month}-{date.day}-{date.year}"
+            )
+        self.selectedMonday = self.listOfNext52Mondays[0]
+        # print(self.listOfNext52Mondays)
+        print(self.selectedMonday)
 
         # Separate module for GUI?
         self.InitWindow()
@@ -78,6 +88,18 @@ class CategoryManager(QWidget):
         # LABEL
         self.lblInfo = QLabel("Load a file to begin editing")
         vboxMaster.addWidget(self.lblInfo)
+
+        hboxMondays = QHBoxLayout()
+        lblMondays = QLabel("This is for the week of (appended to filename): ")
+        self.comboMondays = QComboBox(self)
+        # self.comboMondays.addItem("Select a Week")
+        self.comboMondays.activated[str].connect(self.onComboChanged)
+        # print(f'Found categories: {self.lstQuestions}')
+        self.comboMondays.addItems(self.listOfNext52Mondays)
+        # .addItems(sorted(self.lstQuestions, key=str.lower))
+        hboxMondays.addWidget(lblMondays)
+        hboxMondays.addWidget(self.comboMondays)
+        vboxMaster.addLayout(hboxMondays)
 
         # QUESTION 1
         hboxQ1 = QHBoxLayout()
@@ -320,28 +342,52 @@ class CategoryManager(QWidget):
     def newCategory(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getSaveFileName(self, "QFileDialog.getSaveFileName()",
-                                                  "categories/", "Party Play Indy Category Files (*.ppc)",
-                                                  options=options)
+        fileName, _ = QFileDialog.getSaveFileName(
+            self,
+            "QFileDialog.getSaveFileName()",
+            "categories/",
+            "Party Play Indy Category Files (*.ppc)",
+            options=options,
+        )
         if fileName:
+            fileName += CATEGORY_FILE_EXT
             print(fileName)
 
+        """
+        # List the next 52 Mondays
+        for date in rrule(WEEKLY, byweekday=MO, count=52):
+            stamp = f'{date.month}-{date.day}-{date.year}'
+            print(stamp)
+        """
         configs = configparser.ConfigParser()
-        configs.read(fileName)
+
+        if not exists(fileName):
+            configs.add_section("META")
+            configs.add_section("CONTENT")
+            configs.write(open(fileName, "w"))
+        else:
+            configs.read(fileName)
+
         configs.set("CONTENT", "question1", self.txtQ1.toPlainText())
         configs.set("CONTENT", "answer1", self.txtA1.text())
 
         # https://stackoverflow.com/questions/44907415/configparser-create-file-if-it-doesnt-exist
-        with open(fileName, "ab") as f:
-            configs.add_section("[META]")
-            configs.add_section("[CONTENT]")
+        with open(fileName, "w") as f:
             configs.write(f)
 
     def updateInfoLabel(self, text):
         self.lblInfo.setText(
             'You are editing <div style="font-family: Times; font-size: 30px;\
-                font-style: bold; font-weight: bold;">' + text + "</div>"
+                font-style: bold; font-weight: bold;">'
+            + text
+            + "</div>"
         )
+
+    def onComboChanged(self, text):
+        self.selectedMonday = text
+        print(f"{self.selectedMonday} selected")
+        # self.activeFile = f"{QUESTION_DIR}/{self.activeCategory}.ppq"
+        # print(f"cat: {self.activeCategory}, file: {self.activeFile}")
 
 
 if __name__ == "__main__":
