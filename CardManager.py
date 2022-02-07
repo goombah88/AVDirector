@@ -13,12 +13,12 @@ from dateutil.rrule import rrule, WEEKLY, MO
 from PyQt5.QtWidgets import (
     QApplication,
     QHBoxLayout,
+    QVBoxLayout,
     QLabel,
     # QListWidget,
     # QMessageBox,
     QPushButton,
     # QSizePolicy,
-    QVBoxLayout,
     QWidget,
     QComboBox,
     QFileDialog,
@@ -29,7 +29,7 @@ from PyQt5.QtWidgets import (
 
 MAIN_WINDOW_HEIGHT = 500
 MAIN_WINDOW_WIDTH = 700
-CATEGORY_FILE_EXT = ".ppc"
+CARD_FILE_EXT = ".ppc"
 QUESTION_BOX_HEIGHT = 75
 QUESTION_BOX_WIDTH = 400
 CATEGORIES_FOLDER = "categories/"
@@ -40,12 +40,9 @@ class CardManager(QWidget):
         super().__init__()
 
         # Set some defaults
-        self.title = "Category Manager - Party Play Indy"
+        self.title = "Card Manager by Party Play Indy"
         self.logo = "ppi_logo.jpg"
-        self.pleaseStandBy = "happiness.jpg"
-        self.dialogExists = False
-        self.lstQuestions = []
-        self.lstAnswers = []
+        self.imgPleaseStandBy = "happiness.jpg"
         self.listOfNext12Mondays = []
         self.activeFileName = ""
 
@@ -94,8 +91,9 @@ class CardManager(QWidget):
         vboxMaster.addLayout(hboxButtons)
 
         hboxCategoryName = QHBoxLayout()
-        lblCategoryName = QLabel("Full Name for this Category: ")
+        lblCategoryName = QLabel("Full Name for this Category (special characters allowed): ")
         self.txtCategoryName = QLineEdit()
+        self.txtCategoryName.setFixedWidth(250)
         hboxCategoryName.addWidget(lblCategoryName)
         hboxCategoryName.addWidget(self.txtCategoryName)
         vboxMaster.addLayout(hboxCategoryName)
@@ -104,10 +102,8 @@ class CardManager(QWidget):
         lblMondays = QLabel("This is for the week of (appended to filename): ")
         self.comboMondays = QComboBox(self)
         # self.comboMondays.addItem("Select a Week")
-        self.comboMondays.activated[str].connect(self.onComboChanged)
-        # print(f'Found categories: {self.lstQuestions}')
+        self.comboMondays.activated[str].connect(self.onComboMondayChanged)
         self.comboMondays.addItems(self.listOfNext12Mondays)
-        # .addItems(sorted(self.lstQuestions, key=str.lower))
         hboxMondays.addWidget(lblMondays)
         hboxMondays.addWidget(self.comboMondays)
         vboxMaster.addLayout(hboxMondays)
@@ -254,7 +250,7 @@ class CardManager(QWidget):
             "QFileDialog.getOpenFileName()",
             "categories/",
             # "All Files (*);;Python Files (*.py)",
-            "Party Play Indy Category Files (*.ppc)",
+            "Party Play Indy Card Files (*.ppc)",
             options=options,
         )
         if fileName:
@@ -264,33 +260,31 @@ class CardManager(QWidget):
     def saveConfigToFile(self):
         print("saving to file.")
         fileName = self.getSaveFileName()
-        configs = configparser.ConfigParser()
-        configs.read(fileName)
+        if fileName:
+            configs = configparser.ConfigParser()
 
-        if self.txtCategoryName.text():
-            catName = self.txtCategoryName.text()
-        else:
-            catName = basename(fileName).replace(CATEGORY_FILE_EXT, "")
+            if self.txtCategoryName.text():
+                catName = self.txtCategoryName.text()
+            else:
+                catName = basename(fileName).replace(CARD_FILE_EXT, "")
 
-        configs.set("META", "name", catName)
-        configs.set("META", "venues_used", self.txtQ1.toPlainText())
-        configs.set("CONTENT", "question1", self.txtQ1.toPlainText())
-        configs.set("CONTENT", "answer1", self.txtA1.text())
-        configs.set("CONTENT", "question2", self.txtQ2.toPlainText())
-        configs.set("CONTENT", "answer2", self.txtA2.text())
-        configs.set("CONTENT", "question3", self.txtQ3.toPlainText())
-        configs.set("CONTENT", "answer3", self.txtA3.text())
-        configs.set("CONTENT", "question4", self.txtQ4.toPlainText())
-        configs.set("CONTENT", "answer4", self.txtA4.text())
-        configs.set("CONTENT", "question5", self.txtQ5.toPlainText())
-        configs.set("CONTENT", "answer5", self.txtA5.text())
-        # configs.write(self.activeCategoryConfig)
-        with open(fileName, "w") as f:
-            configs.write(f)
-        # configs.read(self.activeCategoryConfig)
-        # print(f'Full name: {configs.get("name").data}')
-        # print(f'Question 1: {configs.get("question1").data}')
-        # print(f'Answer 1: {configs.get("answer1").data}')
+            configs.read(fileName)
+
+            configs.set("META", "name", catName)
+            configs.set("META", "venues_used", self.txtQ1.toPlainText())
+            configs.set("CONTENT", "question1", self.txtQ1.toPlainText())
+            configs.set("CONTENT", "answer1", self.txtA1.text())
+            configs.set("CONTENT", "question2", self.txtQ2.toPlainText())
+            configs.set("CONTENT", "answer2", self.txtA2.text())
+            configs.set("CONTENT", "question3", self.txtQ3.toPlainText())
+            configs.set("CONTENT", "answer3", self.txtA3.text())
+            configs.set("CONTENT", "question4", self.txtQ4.toPlainText())
+            configs.set("CONTENT", "answer4", self.txtA4.text())
+            configs.set("CONTENT", "question5", self.txtQ5.toPlainText())
+            configs.set("CONTENT", "answer5", self.txtA5.text())
+
+            with open(fileName, "w") as f:
+                configs.write(f)
 
     def getSaveFileName(self):
         options = QFileDialog.Options()
@@ -305,29 +299,27 @@ class CardManager(QWidget):
                 self.selectedMonday,
             ),
             # "All Files (*);;Python Files (*.py)",
-            "Party Play Indy Category Files (*.ppc)",
+            "Party Play Indy Card Files (*.ppc)",
             options=options,
         )
         if fileName:
-            fileName += CATEGORY_FILE_EXT
+            fileName += CARD_FILE_EXT
             print(f"got fileName: {fileName}")
-            self.createNewCategoryFile(fileName)
+            self.createNewCardFile(fileName)
             return fileName
-        else:
-            print(f"file does not exist. creating {fileName}")
 
-    def createNewCategoryFile(self, fileName):
+    def createNewCardFile(self, fileName):
         # options = QFileDialog.Options()
         # options |= QFileDialog.DontUseNativeDialog
         # fileName, _ = QFileDialog.getSaveFileName(
         #     self,
         #     "QFileDialog.getSaveFileName()",
         #     "%s%s" % (CATEGORIES_FOLDER, self.selectedMonday),
-        #     "Party Play Indy Category Files (*.ppc)",
+        #     "Party Play Indy Card Files (*.ppc)",
         #     options=options,
         # )
         # if fileName:
-        #     fileName += CATEGORY_FILE_EXT
+        #     fileName += CARD_FILE_EXT
         #     print(fileName)
 
         configs = configparser.ConfigParser()
@@ -351,11 +343,9 @@ class CardManager(QWidget):
             + "</div>"
         )
 
-    def onComboChanged(self, text):
+    def onComboMondayChanged(self, text):
         self.selectedMonday = text
         print(f"{self.selectedMonday} selected")
-        # self.activeFile = f"{QUESTION_DIR}/{self.activeCategory}.ppq"
-        # print(f"cat: {self.activeCategory}, file: {self.activeFile}")
 
     def sanitize_filename(self, string):
         sanitized = "".join(x for x in string if x.isalnum())
